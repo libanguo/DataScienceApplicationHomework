@@ -39,7 +39,7 @@ public class DocServiceImpl implements DocService {
             paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
             paragraphPO.setIsItalic(characterRun.isItalic());
             //TODO
-            paragraphPO.setLineSpacing(paragraph.getLineSpacing());
+            paragraphPO.setLineSpacing((65536-paragraph.getLineSpacing().toInt())/20);
             paragraphPO.setIsInTable(paragraph.isInTable());
             paragraphPO.setLvl(paragraph.getLvl());
             paragraphPO.setIsTableRowEnd(paragraph.isTableRowEnd());

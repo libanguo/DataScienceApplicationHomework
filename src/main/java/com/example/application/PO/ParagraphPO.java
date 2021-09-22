@@ -16,7 +16,7 @@ public class ParagraphPO {
     private Boolean isItalic;
     private Boolean isInTable;
     private int lvl;
-    private LineSpacingDescriptor lineSpacing;
+    private int lineSpacing;
     private int fontAlignment;
     private Boolean isTableRowEnd;
     private int indentFromLeft;
