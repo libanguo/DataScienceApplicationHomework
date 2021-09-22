@@ -1,6 +1,6 @@
 package com.example.application.PO;
 
-public class Image {
+public class ImagePO {
     private String textBefore;
     private String textAfter;
     private int height;

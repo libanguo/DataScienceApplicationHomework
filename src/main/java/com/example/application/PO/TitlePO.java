@@ -1,6 +1,8 @@
 package com.example.application.PO;
 
-public class ParagraphFormat {
+public class TitlePO {
+    private String paragraphText;
+    private int paragraphId;
     private int lineSpacing;
     private int indentFromLeft;
     private int indentFromRight;

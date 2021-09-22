@@ -1,6 +1,6 @@
 package com.example.application.PO;
 
-public class Font {
+public class FontPO {
     private int color;
     private int fontSize;
     private String fontName;
