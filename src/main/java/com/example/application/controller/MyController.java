@@ -73,4 +73,73 @@ public class MyController {
         return ResponseVO.buildSuccess("无法获取内容");
     }
 
+    @ApiOperation(value = "根据Token获取文档内全部表格信息")
+    @PostMapping("/word_parser/{token}/all_tables")
+    public ResponseVO getAllTables(@PathVariable String token) throws IOException {
+        MultipartFile file = hashMap.get(token);
+        if (file!=null){
+            String fileName = file.getOriginalFilename();
+            String[] tmp=fileName.split("\\.");
+            String type=tmp[tmp.length-1];
+            switch (type){
+                case "doc":
+                    return ResponseVO.buildSuccess(docService.getAllTables(file));
+                case "docx":
+                    break;
+                case "pdf":
+                    break;
+                default:
+                    return ResponseVO.buildSuccess("");
+            }
+
+        }
+        return ResponseVO.buildSuccess("无法获取内容");
+    }
+
+    @ApiOperation(value = "根据Token获取文档内全部图片信息")
+    @PostMapping("/word_parser/{token}/all_tables")
+    public ResponseVO getAllImages(@PathVariable String token) throws IOException {
+        MultipartFile file = hashMap.get(token);
+        if (file!=null){
+            String fileName = file.getOriginalFilename();
+            String[] tmp=fileName.split("\\.");
+            String type=tmp[tmp.length-1];
+            switch (type){
+                case "doc":
+                    return ResponseVO.buildSuccess(docService.getAllImages(file));
+                case "docx":
+                    break;
+                case "pdf":
+                    break;
+                default:
+                    return ResponseVO.buildSuccess("");
+            }
+
+        }
+        return ResponseVO.buildSuccess("无法获取内容");
+    }
+
+    @ApiOperation(value = "根据Token获取文档内全部标题信息")
+    @PostMapping("/word_parser/{token}/all_tables")
+    public ResponseVO getAllTitles(@PathVariable String token) throws IOException {
+        MultipartFile file = hashMap.get(token);
+        if (file!=null){
+            String fileName = file.getOriginalFilename();
+            String[] tmp=fileName.split("\\.");
+            String type=tmp[tmp.length-1];
+            switch (type){
+                case "doc":
+                    return ResponseVO.buildSuccess(docService.getAllTitles(file));
+                case "docx":
+                    break;
+                case "pdf":
+                    break;
+                default:
+                    return ResponseVO.buildSuccess("");
+            }
+
+        }
+        return ResponseVO.buildSuccess("无法获取内容");
+    }
+
 }

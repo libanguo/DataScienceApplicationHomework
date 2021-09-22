@@ -12,7 +12,7 @@ public interface DocService {
     public List<ParagraphPO> getAllParagraphs(MultipartFile file) throws IOException;
     public List<TablePO> getAllTables(MultipartFile file) throws IOException;
     public List<ImagePO> getAllImages(MultipartFile file) throws IOException;
-    public List<TitlePO> getAllTitle(MultipartFile file) throws IOException;
+    public List<TitlePO> getAllTitles(MultipartFile file) throws IOException;
     public ParagraphPO getParagraphText(Paragraph paragraph);
     public TitlePO getParagraphFormat(Paragraph paragraph);
     public FontPO getParagraphFontFormat(Paragraph paragraph);

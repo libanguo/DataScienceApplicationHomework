@@ -12,6 +12,6 @@ public class ImagePO {
     private int height;
     private int width;
     private String suggestFileExtension;
-    private String base64Content;
+    private byte[] base64Content;
     private String filename;
 }

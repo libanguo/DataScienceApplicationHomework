@@ -4,6 +4,7 @@ package com.example.application.serviceImpl;
 import com.example.application.PO.*;
 import com.example.application.service.DocService;
 import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.model.PicturesTable;
 import org.apache.poi.hwpf.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.poi.hslf.record.OEPlaceholderAtom.Title;
 
 @Service
 public class DocServiceImpl implements DocService {
@@ -39,7 +42,7 @@ public class DocServiceImpl implements DocService {
             paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
             paragraphPO.setIsItalic(characterRun.isItalic());
             //TODO
-            paragraphPO.setLineSpacing((65536-paragraph.getLineSpacing().toInt())/20);
+            paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()) / 20);
             paragraphPO.setIsInTable(paragraph.isInTable());
             paragraphPO.setLvl(paragraph.getLvl());
             paragraphPO.setIsTableRowEnd(paragraph.isTableRowEnd());
@@ -144,12 +147,51 @@ public class DocServiceImpl implements DocService {
 
     @Override
     public List<ImagePO> getAllImages(MultipartFile file) throws IOException {
-        return null;
+        InputStream is = file.getInputStream();
+        HWPFDocument doc = new HWPFDocument(is);
+        int length = doc.characterLength();
+        PicturesTable pTable = doc.getPicturesTable();
+        List<ImagePO> imagePOList = new ArrayList<>();
+        for (int i = 0; i < length; i++) {
+            Range range = new Range(i, i + 1, doc);
+            CharacterRun cr = range.getCharacterRun(0);
+            if (pTable.hasPicture(cr)) {
+                ImagePO imagePO = new ImagePO();
+                Picture pic = pTable.extractPicture(cr, false);
+                imagePO.setFilename(pic.suggestFullFileName());
+                imagePO.setTextBefore(pic.getDescription());
+                imagePO.setTextAfter(pic.getDescription());
+                imagePO.setBase64Content(pic.getContent());
+                imagePO.setHeight(pic.getHeight());
+                imagePO.setWidth(pic.getWidth());
+                imagePO.setSuggestFileExtension(pic.suggestFileExtension());
+                imagePOList.add(imagePO);
+            }
+        }
+        return imagePOList;
     }
 
     @Override
-    public List<TitlePO> getAllTitle(MultipartFile file) throws IOException {
-        return null;
+    public List<TitlePO> getAllTitles(MultipartFile file) throws IOException {
+        InputStream is = file.getInputStream();
+        HWPFDocument doc = new HWPFDocument(is);
+        Range range = doc.getRange();
+        int paraNum = range.numParagraphs();
+        List<TitlePO> titlePOS = new ArrayList<>();
+        for (int i = 0; i < paraNum; i++) {
+            Paragraph paragraph = range.getParagraph(i);
+            if (paragraph.getLvl() < 9) {
+                TitlePO titlePO = new TitlePO();
+                titlePO.setLvl(paragraph.getLvl());
+                titlePO.setParagraphText(paragraph.text());
+                titlePO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()) / 20);
+                titlePO.setIndentFromLeft(paragraph.getIndentFromLeft());
+                titlePO.setIndentFromRight(paragraph.getIndentFromRight());
+                titlePO.setFirstLineIndent(paragraph.getFirstLineIndent());
+                titlePOS.add(titlePO);
+            }
+        }
+        return titlePOS;
     }
 
     @Override
