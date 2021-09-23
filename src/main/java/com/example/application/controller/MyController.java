@@ -9,12 +9,15 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @CrossOrigin
@@ -65,7 +68,7 @@ public class MyController {
                 case "doc":
                     return ResponseVO.buildSuccess(docService.getAllParagraphs(file));
                 case "docx":
-                    break;
+                    return ResponseVO.buildSuccess(docxService.getAllParagraphs(file));
                 case "pdf":
                     break;
                 default:
@@ -88,7 +91,7 @@ public class MyController {
                 case "doc":
                     return ResponseVO.buildSuccess(docService.getAllTables(file));
                 case "docx":
-                    break;
+                    return ResponseVO.buildSuccess(docxService.getAllTables(file));
                 case "pdf":
                     break;
                 default:
@@ -111,7 +114,7 @@ public class MyController {
                 case "doc":
                     return ResponseVO.buildSuccess(docService.getAllImages(file));
                 case "docx":
-                    break;
+                    return ResponseVO.buildSuccess(docxService.getAllImages(file));
                 case "pdf":
                     break;
                 default:
@@ -134,7 +137,7 @@ public class MyController {
                 case "doc":
                     return ResponseVO.buildSuccess(docService.getAllTitles(file));
                 case "docx":
-                    break;
+                    return ResponseVO.buildSuccess(docxService.getAllTitles(file));
                 case "pdf":
                     break;
                 default:
@@ -147,21 +150,26 @@ public class MyController {
 
     @ApiOperation(value = "根据Token、段落id获取段落详细信息")
     @PostMapping("/word_parser/{token}/paragraph/{paragraph_id}")
-    public ResponseVO getParagraphById(@PathVariable String token, int paragraphId) throws IOException {
+    public ResponseVO getParagraphById(@PathVariable String token, int paragraph_id) throws IOException {
         MultipartFile file = hashMap.get(token);
         if (file != null) {
             String fileName = file.getOriginalFilename();
             String[] tmp = fileName.split("\\.");
             String type = tmp[tmp.length - 1];
+
             switch (type) {
                 case "doc":
                     InputStream is = file.getInputStream();
                     HWPFDocument doc = new HWPFDocument(is);
                     Range range = doc.getRange();
-                    Paragraph paragraph = range.getParagraph(paragraphId);
-                    return ResponseVO.buildSuccess(docService.getParagraphText(paragraph, paragraphId));
+                    Paragraph paragraph = range.getParagraph(paragraph_id);
+                    return ResponseVO.buildSuccess(docService.getParagraphText(paragraph, paragraph_id));
                 case "docx":
-                    break;
+                    InputStream iss = file.getInputStream();
+                    XWPFDocument docx = new XWPFDocument(iss);
+                    List<XWPFParagraph> paras = docx.getParagraphs();
+                    XWPFParagraph para = paras.get(paragraph_id);
+                    return ResponseVO.buildSuccess(docxService.getParagraphText(para, paragraph_id));
                 case "pdf":
                     break;
                 default:
@@ -188,7 +196,11 @@ public class MyController {
                     Paragraph paragraph = range.getParagraph(paragraph_id);
                     return ResponseVO.buildSuccess(docService.getParagraphFormat(paragraph, paragraph_id));
                 case "docx":
-                    break;
+                    InputStream iss = file.getInputStream();
+                    XWPFDocument docx = new XWPFDocument(iss);
+                    List<XWPFParagraph> paras = docx.getParagraphs();
+                    XWPFParagraph para = paras.get(paragraph_id);
+                    return ResponseVO.buildSuccess(docxService.getParagraphFormat(para, paragraph_id));
                 case "pdf":
                     break;
                 default:
@@ -215,7 +227,11 @@ public class MyController {
                     Paragraph paragraph = range.getParagraph(paragraph_id);
                     return ResponseVO.buildSuccess(docService.getParagraphFontFormat(paragraph));
                 case "docx":
-                    break;
+                    InputStream iss = file.getInputStream();
+                    XWPFDocument docx = new XWPFDocument(iss);
+                    List<XWPFParagraph> paras = docx.getParagraphs();
+                    XWPFParagraph para = paras.get(paragraph_id);
+                    return ResponseVO.buildSuccess(docxService.getParagraphFontFormat(para));
                 case "pdf":
                     break;
                 default:
@@ -226,6 +242,7 @@ public class MyController {
         return ResponseVO.buildSuccess("无法获取内容");
     }
 
+    //TODO
     @ApiOperation(value = "根据Token、段落id获取标题下全部段落信息")
     @PostMapping("/word_parser/{token}/title/{paragraph_id}/all_paragraphs")
     public ResponseVO getParagraphByTitle(@PathVariable String token, int paragraph_id) throws IOException {
@@ -249,6 +266,7 @@ public class MyController {
         return ResponseVO.buildSuccess("无法获取内容");
     }
 
+    //TODO
     @ApiOperation(value = "根据Token、段落id获取标题下全部图片信息")
     @PostMapping("/word_parser/{token}/title/{paragraph_id}/all_pics")
     public ResponseVO getImagesByTitle(@PathVariable String token, int paragraph_id) throws IOException {
@@ -272,6 +290,7 @@ public class MyController {
         return ResponseVO.buildSuccess("无法获取内容");
     }
 
+    //TODO
     @ApiOperation(value = "根据Token、段落id获取标题下全部表格信息")
     @PostMapping("/word_parser/{token}/title/{paragraph_id}/all_tables")
     public ResponseVO getTablesByTitle(@PathVariable String token, int paragraph_id) throws IOException {

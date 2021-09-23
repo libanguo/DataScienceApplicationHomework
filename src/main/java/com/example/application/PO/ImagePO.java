@@ -9,8 +9,8 @@ import lombok.Setter;
 public class ImagePO {
     private String textBefore;
     private String textAfter;
-    private int height;
-    private int width;
+    private Double height;
+    private Double width;
     private String suggestFileExtension;
     private byte[] base64Content;
     private String filename;

@@ -41,7 +41,7 @@ public class DocServiceImpl implements DocService {
             paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
             paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
             paragraphPO.setIsItalic(characterRun.isItalic());
-            paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()) / 20);
+            paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()));
             paragraphPO.setIsInTable(paragraph.isInTable());
             paragraphPO.setLvl(paragraph.getLvl());
             paragraphPO.setIsTableRowEnd(paragraph.isTableRowEnd());
@@ -161,8 +161,8 @@ public class DocServiceImpl implements DocService {
                 imagePO.setTextBefore(pic.getDescription());
                 imagePO.setTextAfter(pic.getDescription());
                 imagePO.setBase64Content(pic.getContent());
-                imagePO.setHeight(pic.getHeight());
-                imagePO.setWidth(pic.getWidth());
+                imagePO.setHeight(Double.parseDouble(pic.getHeight()+""));
+                imagePO.setWidth(Double.parseDouble(pic.getWidth()+""));
                 imagePO.setSuggestFileExtension(pic.suggestFileExtension());
                 imagePOList.add(imagePO);
             }
@@ -270,7 +270,7 @@ public class DocServiceImpl implements DocService {
             paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
             paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
             paragraphPO.setIsItalic(characterRun.isItalic());
-            paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()) / 20);
+            paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()));
             paragraphPO.setIsInTable(paragraph.isInTable());
             paragraphPO.setLvl(paragraph.getLvl());
             paragraphPO.setIsTableRowEnd(paragraph.isTableRowEnd());
@@ -306,8 +306,8 @@ public class DocServiceImpl implements DocService {
                 imagePO.setTextBefore(pic.getDescription());
                 imagePO.setTextAfter(pic.getDescription());
                 imagePO.setBase64Content(pic.getContent());
-                imagePO.setHeight(pic.getHeight());
-                imagePO.setWidth(pic.getWidth());
+                imagePO.setHeight(Double.parseDouble(pic.getHeight()+""));
+                imagePO.setWidth(Double.parseDouble(pic.getWidth()+""));
                 imagePO.setSuggestFileExtension(pic.suggestFileExtension());
                 imagePOList.add(imagePO);
             }
