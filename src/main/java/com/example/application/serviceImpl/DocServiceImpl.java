@@ -41,7 +41,6 @@ public class DocServiceImpl implements DocService {
             paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
             paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
             paragraphPO.setIsItalic(characterRun.isItalic());
-            //TODO
             paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()) / 20);
             paragraphPO.setIsInTable(paragraph.isInTable());
             paragraphPO.setLvl(paragraph.getLvl());
@@ -58,7 +57,7 @@ public class DocServiceImpl implements DocService {
         HWPFDocument doc = new HWPFDocument(is);
         Range range = doc.getRange();
         int paraNum = range.numParagraphs();
-        //获取内容和编号
+        // 从头开始遍历所有的段，如果在table里，co为i，然后用co去找表格段尾
         int co = 0;
         for (int i = co; i < paraNum; i++) {
             Paragraph paragraph = range.getParagraph(i);
@@ -195,38 +194,227 @@ public class DocServiceImpl implements DocService {
     }
 
     @Override
-    public ParagraphPO getParagraphText(Paragraph paragraph) {
-        return null;
+    public ParagraphPO getParagraphText(Paragraph paragraph, int id) {
+        Paragraph paragraphToGet = paragraph;
+        ParagraphPO paragraphPO = new ParagraphPO();
+        CharacterRun characterRun = paragraphToGet.getCharacterRun(0);
+        paragraphPO.setParagraphText("" + paragraphToGet.getIlfo() + " " + paragraphToGet.text());
+        paragraphPO.setParagraphId(paragraphToGet.getIlfo() == 0 ? id : paragraphToGet.getIlfo());
+        paragraphPO.setFontName(characterRun.getFontName());
+        paragraphPO.setFontSize(characterRun.getFontSize());
+        paragraphPO.setFontAlignment(paragraphToGet.getFontAlignment());
+        paragraphPO.setFirstLineIndent(paragraphToGet.getFirstLineIndent());
+        paragraphPO.setIsBold(characterRun.isBold());
+        paragraphPO.setIndentFromLeft(paragraphToGet.getIndentFromLeft());
+        paragraphPO.setIndentFromRight(paragraphToGet.getIndentFromRight());
+        paragraphPO.setIsItalic(characterRun.isItalic());
+        paragraphPO.setLineSpacing((65536 - paragraphToGet.getLineSpacing().toInt()) / 20);
+        paragraphPO.setIsInTable(paragraphToGet.isInTable());
+        paragraphPO.setLvl(paragraphToGet.getLvl());
+        paragraphPO.setIsTableRowEnd(paragraphToGet.isTableRowEnd());
+        return paragraphPO;
     }
 
     @Override
-    public TitlePO getParagraphFormat(Paragraph paragraph) {
-        return null;
+    public ParagraphFormatPO getParagraphFormat(Paragraph paragraph, int id) {
+        Paragraph paragraphToGet = paragraph;
+        ParagraphFormatPO paragraphFormatPO = new ParagraphFormatPO();
+        paragraphFormatPO.setLineSpacing(65536 - paragraphToGet.getLineSpacing().toInt());
+        paragraphFormatPO.setIndentFromLeft(paragraphToGet.getIndentFromLeft());
+        paragraphFormatPO.setIndentFromRight(paragraphToGet.getIndentFromRight());
+        paragraphFormatPO.setFirstLineIndent(paragraphToGet.getFirstLineIndent());
+        paragraphFormatPO.setLvl(paragraphToGet.getLvl());
+        return paragraphFormatPO;
     }
 
     @Override
     public FontPO getParagraphFontFormat(Paragraph paragraph) {
-        return null;
+        Paragraph paragraphToGet = paragraph;
+        FontPO fontPO = new FontPO();
+        CharacterRun characterRun = paragraphToGet.getCharacterRun(0);
+        fontPO.setColor(characterRun.getColor());
+        fontPO.setFontSize(characterRun.getFontSize());
+        fontPO.setFontName(characterRun.getFontName());
+        fontPO.setFontAlignment(paragraphToGet.getFontAlignment());
+        fontPO.setIsBold(characterRun.isBold());
+        fontPO.setIsItalic(characterRun.isItalic());
+        return fontPO;
     }
 
     @Override
-    public List<ParagraphPO> getParagraphByTitle(MultipartFile file, int paragraphId) {
-        return null;
+    public List<ParagraphPO> getParagraphByTitle(MultipartFile file, int paragraphId) throws IOException {
+        InputStream is = file.getInputStream();
+        HWPFDocument doc = new HWPFDocument(is);
+        Range range = doc.getRange();
+        int paraNum = range.numParagraphs();
+        int co = paragraphId;
+        for (int i = paragraphId; i < paraNum; i++) {
+            //1-8 9是段落，越大等级越小
+            if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
+                co++;
+            }
+        }
+        List<ParagraphPO> paragraphList = new ArrayList<>();
+        for (int i = paragraphId; i < co; i++) {
+            ParagraphPO paragraphPO = new ParagraphPO();
+            Paragraph paragraph = range.getParagraph(i);
+            CharacterRun characterRun = paragraph.getCharacterRun(0);
+            paragraphPO.setParagraphText("" + paragraph.getIlfo() + " " + paragraph.text());
+            int id = i + 1;
+            paragraphPO.setParagraphId(paragraph.getIlfo() == 0 ? id : paragraph.getIlfo());
+            paragraphPO.setFontName(characterRun.getFontName());
+            paragraphPO.setFontSize(characterRun.getFontSize());
+            paragraphPO.setFontAlignment(paragraph.getFontAlignment());
+            paragraphPO.setFirstLineIndent(paragraph.getFirstLineIndent());
+            paragraphPO.setIsBold(characterRun.isBold());
+            paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
+            paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
+            paragraphPO.setIsItalic(characterRun.isItalic());
+            paragraphPO.setLineSpacing((65536 - paragraph.getLineSpacing().toInt()) / 20);
+            paragraphPO.setIsInTable(paragraph.isInTable());
+            paragraphPO.setLvl(paragraph.getLvl());
+            paragraphPO.setIsTableRowEnd(paragraph.isTableRowEnd());
+            paragraphList.add(paragraphPO);
+        }
+        return paragraphList;
     }
 
     @Override
-    public List<ImagePO> getImagesByTitle(MultipartFile file, int paragraphId) {
-        return null;
+    public List<ImagePO> getImagesByTitle(MultipartFile file, int paragraphId) throws IOException {
+        InputStream is = file.getInputStream();
+        HWPFDocument doc = new HWPFDocument(is);
+        Range range = doc.getRange();
+        int paraNum = range.numParagraphs();
+        int co = paragraphId;
+        for (int i = paragraphId; i < paraNum; i++) {
+            //1-8 9是段落，越大等级越小
+            if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
+                co++;
+            }
+        }
+        range = new Range(paragraphId, co, doc);
+        int length = range.numParagraphs();
+        List<ImagePO> imagePOList = new ArrayList<>();
+        PicturesTable pTable = doc.getPicturesTable();
+        for (int i = paragraphId; i < paragraphId + length; i++) {
+            Range rangeTemp = new Range(i, i + 1, doc);
+            CharacterRun cr = rangeTemp.getCharacterRun(0);
+            if (pTable.hasPicture(cr)) {
+                ImagePO imagePO = new ImagePO();
+                Picture pic = pTable.extractPicture(cr, false);
+                imagePO.setFilename(pic.suggestFullFileName());
+                imagePO.setTextBefore(pic.getDescription());
+                imagePO.setTextAfter(pic.getDescription());
+                imagePO.setBase64Content(pic.getContent());
+                imagePO.setHeight(pic.getHeight());
+                imagePO.setWidth(pic.getWidth());
+                imagePO.setSuggestFileExtension(pic.suggestFileExtension());
+                imagePOList.add(imagePO);
+            }
+        }
+        return imagePOList;
     }
 
     @Override
-    public List<TablePO> getTablesByTitle(MultipartFile file, int paragraphId) {
-        return null;
+    public List<TablePO> getTablesByTitle(MultipartFile file, int paragraphId) throws IOException {
+        List<TablePO> tableList = new ArrayList<>();
+        InputStream is = file.getInputStream();
+        HWPFDocument doc = new HWPFDocument(is);
+        Range range = doc.getRange();
+        int paraNumTemp = range.numParagraphs();
+        int temp = paragraphId;
+        for (int i = paragraphId; i < paraNumTemp; i++) {
+            //1-8 9是段落，越大等级越小
+            if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
+                temp++;
+            }
+        }
+        // 从标题开始遍历所有的段，如果在table里，co为i，然后用co去找表格段尾
+        int co = paragraphId;
+        for (int i = co; i < temp; i++) {
+            Paragraph paragraph = range.getParagraph(i);
+            TablePO tablePO = new TablePO();
+            if (paragraph.isInTable()) {
+                co = i;
+                while (range.getParagraph(co).isInTable()) {
+                    co++;
+                }
+                if (i != 0 && co != temp - 1) {
+                    Paragraph paragraphPref = range.getParagraph(i - 1);
+                    Paragraph paragraphAfter = range.getParagraph(co);
+                    TableGraphPO paragraphPOPref = new TableGraphPO();
+                    TableGraphPO paragraphPOAfter = new TableGraphPO();
+                    paragraphPOPref.setParagraphId(i - 1);
+                    paragraphPOPref.setTableTextContent(paragraphPref.text());
+                    paragraphPOAfter.setParagraphId(co);
+                    paragraphPOAfter.setTableTextContent(paragraphAfter.text());
+                    tablePO.setParagraphBefore(paragraphPOPref);
+                    tablePO.setParagraphAfter(paragraphPOAfter);
+                    if (paragraphPOPref.getTableTextContent().length() <= 10) {
+                        tablePO.setTextBefore(paragraphPOPref.getTableTextContent());
+                    } else {
+                        tablePO.setTextBefore("");
+                    }
+                    if (paragraphPOAfter.getTableTextContent().length() <= 10) {
+                        tablePO.setTextAfter(paragraphPOAfter.getTableTextContent());
+                    } else {
+                        tablePO.setTextAfter("");
+                    }
+                } else if (i == 0 && co != temp - 1) {
+                    TableGraphPO paragraphPOPref = new TableGraphPO();
+                    TableGraphPO paragraphPOAfter = new TableGraphPO();
+                    Paragraph paragraphAfter = range.getParagraph(co);
+                    paragraphPOPref.setParagraphId(i - 1);
+                    paragraphPOPref.setTableTextContent("");
+                    paragraphPOAfter.setParagraphId(co);
+                    paragraphPOAfter.setTableTextContent(paragraphAfter.text());
+                    tablePO.setParagraphBefore(paragraphPOPref);
+                    tablePO.setParagraphAfter(paragraphPOAfter);
+                    if (paragraphPOPref.getTableTextContent().length() <= 10) {
+                        tablePO.setTextBefore(paragraphPOPref.getTableTextContent());
+                    } else {
+                        tablePO.setTextBefore("");
+                    }
+                    if (paragraphPOAfter.getTableTextContent().length() <= 10) {
+                        tablePO.setTextAfter(paragraphPOAfter.getTableTextContent());
+                    } else {
+                        tablePO.setTextAfter("");
+                    }
+                } else if (co == temp - 1 && i != 0) {
+                    Paragraph paragraphPref = range.getParagraph(i - 1);
+                    TableGraphPO paragraphPOPref = new TableGraphPO();
+                    TableGraphPO paragraphPOAfter = new TableGraphPO();
+                    paragraphPOPref.setParagraphId(i - 1);
+                    paragraphPOPref.setTableTextContent(paragraphPref.text());
+                    paragraphPOAfter.setParagraphId(co);
+                    paragraphPOAfter.setTableTextContent("");
+                    tablePO.setParagraphBefore(paragraphPOPref);
+                    tablePO.setParagraphAfter(paragraphPOAfter);
+                    if (paragraphPOPref.getTableTextContent().length() <= 10) {
+                        tablePO.setTextBefore(paragraphPOPref.getTableTextContent());
+                    } else {
+                        tablePO.setTextBefore("");
+                    }
+                    if (paragraphPOAfter.getTableTextContent().length() <= 10) {
+                        tablePO.setTextAfter(paragraphPOAfter.getTableTextContent());
+                    } else {
+                        tablePO.setTextAfter("");
+                    }
+                }
+                List<TableGraphPO> tableContent = new ArrayList<>();
+                for (int j = i; j < co; j++) {
+                    TableGraphPO tablePOTemp = new TableGraphPO();
+                    Paragraph paragraphTemp = range.getParagraph(j);
+                    tablePOTemp.setParagraphId(j);
+                    tablePOTemp.setTableTextContent(paragraphTemp.text());
+                    tableContent.add(tablePOTemp);
+                }
+                tablePO.setTableContent(tableContent);
+                tableList.add(tablePO);
+            }
+        }
+        return tableList;
     }
 
-    @Override
-    public void delete() {
-
-    }
 
 }
