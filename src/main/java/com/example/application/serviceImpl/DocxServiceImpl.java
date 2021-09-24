@@ -62,13 +62,49 @@ public class DocxServiceImpl implements DocxService {
                 fontPO.setIsItalic(xwpfRun.isItalic());
                 fontPO.setFontAlignment(paragraph.getFontAlignment());
                 if(xwpfRun.getColor()!=null){
-                    fontPO.setColor(Integer.parseInt(xwpfRun.getColor()));
+                    fontPO.setColor(xwpfRun.getColor());
                 }
                 fontPOS.add(fontPO);
                 paragraphPO.setIsInTable(false);
                 //TODO 存疑
-                if(paragraph.getCTP().getPPr().getOutlineLvl()!=null){
-                    paragraphPO.setLvl(Integer.parseInt(paragraph.getStyle()));
+                XWPFStyles styles =doc.getStyles();
+                if (paragraph.getCTP().getPPr().getOutlineLvl() != null) {
+                    TitlePO title = new TitlePO();
+                    title.setParagraphText(paragraph.getParagraphText());
+                    title.setParagraphId(paragraphId);
+                    title.setIndentFromLeft(paragraph.getIndentFromLeft());
+                    title.setIndentFromRight(paragraph.getIndentFromRight());
+                    title.setFirstLineIndent(paragraph.getFirstLineIndent());
+                    title.setLvl(paragraph.getCTP().getPPr().getOutlineLvl().getVal().intValue());
+                    paragraphPO.setLvl(paragraph.getCTP().getPPr().getOutlineLvl().getVal().intValue());
+                    titlePOS.add(title);
+                    //判断该段落的样式是否设置了大纲级别
+                } else if (paragraph.getStyle()!=null && styles.getStyle(paragraph.getStyle()).getCTStyle().getPPr()!=null && styles.getStyle(paragraph.getStyle()).getCTStyle().getPPr().getOutlineLvl() != null) {
+                    TitlePO title = new TitlePO();
+                    title.setParagraphText(paragraph.getParagraphText());
+                    title.setParagraphId(paragraphId);
+                    title.setIndentFromLeft(paragraph.getIndentFromLeft());
+                    title.setIndentFromRight(paragraph.getIndentFromRight());
+                    title.setFirstLineIndent(paragraph.getFirstLineIndent());
+                    title.setLvl(styles.getStyle(paragraph.getStyle()).getCTStyle().getPPr().getOutlineLvl().getVal().intValue());
+                    paragraphPO.setLvl(styles.getStyle(paragraph.getStyle()).getCTStyle().getPPr().getOutlineLvl().getVal().intValue());
+                    titlePOS.add(title);
+                    //判断该段落的样式的基础样式是否设置了大纲级别
+                } else if (paragraph.getStyle()!=null && styles.getStyle(styles.getStyle(paragraph.getStyle()).getCTStyle().getBasedOn().getVal())!=null && styles.getStyle(styles.getStyle(paragraph.getStyle()).getCTStyle().getBasedOn().getVal())
+                        .getCTStyle().getPPr().getOutlineLvl() != null) {
+                    String styleName = styles.getStyle(paragraph.getStyle()).getCTStyle().getBasedOn().getVal();
+                    TitlePO title = new TitlePO();
+                    title.setParagraphText(paragraph.getParagraphText());
+                    title.setParagraphId(paragraphId);
+                    title.setIndentFromLeft(paragraph.getIndentFromLeft());
+                    title.setIndentFromRight(paragraph.getIndentFromRight());
+                    title.setFirstLineIndent(paragraph.getFirstLineIndent());
+                    title.setLvl(styles.getStyle(styleName).getCTStyle().getPPr().getOutlineLvl().getVal().intValue());
+                    paragraphPO.setLvl(styles.getStyle(styleName).getCTStyle().getPPr().getOutlineLvl().getVal().intValue());
+                    titlePOS.add(title);
+                    //没有设置大纲级别
+                } else {
+                    paragraphPO.setLvl(9);
                 }
                 paragraphPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
                 paragraphPO.setFontAlignment(paragraph.getFontAlignment());
@@ -76,19 +112,6 @@ public class DocxServiceImpl implements DocxService {
                 paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
                 paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
                 paragraphPOS.add(paragraphPO);
-                if(paragraph.getCTP().getPPr().getOutlineLvl()!=null){
-                    String style = paragraph.getStyle();
-                    if (style.compareTo("9") < 0) {
-                        TitlePO title = new TitlePO();
-                        title.setParagraphText(paragraph.getParagraphText());
-                        title.setParagraphId(paragraphId);
-                        title.setIndentFromLeft(paragraph.getIndentFromLeft());
-                        title.setIndentFromRight(paragraph.getIndentFromRight());
-                        title.setFirstLineIndent(paragraph.getFirstLineIndent());
-                        title.setLvl(Integer.parseInt(paragraph.getStyle()));
-                        titlePOS.add(title);
-                    }
-                }
                 for (XWPFRun xwpfRun1: paragraph.getRuns()){
                     for (XWPFPicture picture : xwpfRun1.getEmbeddedPictures()){
                         ImagePO imagePO=new ImagePO();
@@ -134,9 +157,7 @@ public class DocxServiceImpl implements DocxService {
                         paragraphPO.setIsItalic(xwpfRun.isItalic());
                         paragraphPO.setIsInTable(false);
                         //TODO 存疑
-                        if(paragraph.getCTP().getPPr().getOutlineLvl()!=null){
-                            paragraphPO.setLvl(Integer.parseInt(paragraph.getStyle()));
-                        }
+                        paragraphPO.setLvl(9);
                         paragraphPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
                         paragraphPO.setFontAlignment(paragraph.getFontAlignment());
                         paragraphPO.setIsTableRowEnd(false);
@@ -152,7 +173,7 @@ public class DocxServiceImpl implements DocxService {
                         fontPO.setIsItalic(xwpfRun.isItalic());
                         fontPO.setFontAlignment(paragraph.getFontAlignment());
                         if(xwpfRun.getColor()!=null){
-                            fontPO.setColor(Integer.parseInt(xwpfRun.getColor()));
+                            fontPO.setColor(xwpfRun.getColor());
                         }
                         fontPOS.add(fontPO);
                         paragraphId++;

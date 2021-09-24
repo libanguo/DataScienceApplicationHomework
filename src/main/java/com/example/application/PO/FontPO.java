@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 
 public class FontPO {
-    private int color;
+    private String color;
     private int fontSize;
     private String fontName;
     private Boolean isBold;

@@ -259,8 +259,17 @@ public class MyController {
                     List<ParagraphPO> paragraphPOS=paragraphHashMap.get(token);
                     List<ParagraphPO> result=new ArrayList<>();
                     for(int i=0;i<paragraphPOS.size();i++){
-                        if(paragraphPOS.get(i).getParagraphId()>paragraph_id){
+                        if(paragraphPOS.get(i).getParagraphId()==paragraph_id){
                             result.add(paragraphPOS.get(i));
+                            for(int j=i+1;j<paragraphPOS.size();j++){
+                                if(paragraphPOS.get(j).getLvl()>paragraphPOS.get(i).getLvl()){
+                                    result.add(paragraphPOS.get(j));
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                            break;
                         }
                     }
                     return ResponseVO.buildSuccess(result);
@@ -285,10 +294,23 @@ public class MyController {
                 case "doc":
                     return ResponseVO.buildSuccess(docService.getImagesByTitle(file,paragraph_id));
                 case "docx":
+                    List<TitlePO> titlePOS=titleHashMap.get(token);
                     List<ImagePO> imagePOS=imageHashMap.get(token);
                     List<ImagePO> result=new ArrayList<>();
+                    int id=9999999;
+                    for(int i=0;i<titlePOS.size();i++){
+                        if(titlePOS.get(i).getParagraphId()==paragraph_id){
+                            for(int j=i+1;j<titlePOS.size();j++){
+                                if(titlePOS.get(i).getLvl()>=titlePOS.get(j).getLvl()){
+                                    id=titlePOS.get(j).getParagraphId();
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
                     for(int i=0;i<imagePOS.size();i++){
-                        if(imagePOS.get(i).getParagraphBefore()>=paragraph_id){
+                        if(imagePOS.get(i).getParagraphBefore()>=(paragraph_id-1)&&imagePOS.get(i).getParagraphBefore()<=(id-2)){
                             result.add(imagePOS.get(i));
                         }
                     }
@@ -314,10 +336,23 @@ public class MyController {
                 case "doc":
                     return ResponseVO.buildSuccess(docService.getTablesByTitle(file,paragraph_id));
                 case "docx":
+                    List<TitlePO> titlePOS=titleHashMap.get(token);
                     List<TablePO> tablePOS=tableHashMap.get(token);
                     List<TablePO> result=new ArrayList<>();
+                    int id=99999999;
+                    for(int i=0;i<titlePOS.size();i++){
+                        if(titlePOS.get(i).getParagraphId()==paragraph_id){
+                            for(int j=i+1;j<titlePOS.size();j++){
+                                if(titlePOS.get(i).getLvl()>=titlePOS.get(j).getLvl()){
+                                    id=titlePOS.get(j).getParagraphId();
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
                     for(int i=0;i<tablePOS.size();i++){
-                        if(tablePOS.get(i).getParagraphBefore().getParagraphId()>=paragraph_id){
+                        if(tablePOS.get(i).getParagraphBefore().getParagraphId()>=(paragraph_id-1)&&tablePOS.get(i).getParagraphBefore().getParagraphId()<=(id-2)){
                             result.add(tablePOS.get(i));
                         }
                     }

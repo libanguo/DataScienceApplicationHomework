@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.poi.hslf.record.OEPlaceholderAtom.Title;
 
 @Service
 public class DocServiceImpl implements DocService {
@@ -59,15 +58,16 @@ public class DocServiceImpl implements DocService {
         int paraNum = range.numParagraphs();
         // 从头开始遍历所有的段，如果在table里，co为i，然后用co去找表格段尾
         int co = 0;
-        for (int i = co; i < paraNum; i++) {
+        int i=0;
+        while (i<paraNum){
             Paragraph paragraph = range.getParagraph(i);
             TablePO tablePO = new TablePO();
             if (paragraph.isInTable()) {
                 co = i;
-                while (range.getParagraph(co).isInTable()) {
+                while (co<paraNum && range.getParagraph(co).isInTable()) {
                     co++;
                 }
-                if (i != 0 && co != paraNum - 1) {
+                if (i != 0 && co != paraNum) {
                     Paragraph paragraphPref = range.getParagraph(i - 1);
                     Paragraph paragraphAfter = range.getParagraph(co);
                     TableGraphPO paragraphPOPref = new TableGraphPO();
@@ -88,7 +88,7 @@ public class DocServiceImpl implements DocService {
                     } else {
                         tablePO.setTextAfter("");
                     }
-                } else if (i == 0 && co != paraNum - 1) {
+                } else if (i == 0 && co != paraNum) {
                     TableGraphPO paragraphPOPref = new TableGraphPO();
                     TableGraphPO paragraphPOAfter = new TableGraphPO();
                     Paragraph paragraphAfter = range.getParagraph(co);
@@ -108,7 +108,7 @@ public class DocServiceImpl implements DocService {
                     } else {
                         tablePO.setTextAfter("");
                     }
-                } else if (co == paraNum - 1 && i != 0) {
+                } else if (co == paraNum && i != 0) {
                     Paragraph paragraphPref = range.getParagraph(i - 1);
                     TableGraphPO paragraphPOPref = new TableGraphPO();
                     TableGraphPO paragraphPOAfter = new TableGraphPO();
@@ -139,8 +139,15 @@ public class DocServiceImpl implements DocService {
                 }
                 tablePO.setTableContent(tableContent);
                 tableList.add(tablePO);
+                i=co;
+            }
+            else {
+                i++;
             }
         }
+//        for (int i = co; i < paraNum; i++) {
+//
+//        }
         return tableList;
     }
 
@@ -232,7 +239,7 @@ public class DocServiceImpl implements DocService {
         Paragraph paragraphToGet = paragraph;
         FontPO fontPO = new FontPO();
         CharacterRun characterRun = paragraphToGet.getCharacterRun(0);
-        fontPO.setColor(characterRun.getColor());
+        fontPO.setColor(characterRun.getColor()+"");
         fontPO.setFontSize(characterRun.getFontSize());
         fontPO.setFontName(characterRun.getFontName());
         fontPO.setFontAlignment(paragraphToGet.getFontAlignment());
@@ -243,19 +250,23 @@ public class DocServiceImpl implements DocService {
 
     @Override
     public List<ParagraphPO> getParagraphByTitle(MultipartFile file, int paragraphId) throws IOException {
+        paragraphId--;
         InputStream is = file.getInputStream();
         HWPFDocument doc = new HWPFDocument(is);
         Range range = doc.getRange();
         int paraNum = range.numParagraphs();
         int co = paragraphId;
-        for (int i = paragraphId; i < paraNum; i++) {
+        for (int i = paragraphId+1; i < paraNum; i++) {
             //1-8 9是段落，越大等级越小
             if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
                 co++;
             }
+            else {
+                break;
+            }
         }
         List<ParagraphPO> paragraphList = new ArrayList<>();
-        for (int i = paragraphId; i < co; i++) {
+        for (int i = paragraphId; i < co+1; i++) {
             ParagraphPO paragraphPO = new ParagraphPO();
             Paragraph paragraph = range.getParagraph(i);
             CharacterRun characterRun = paragraph.getCharacterRun(0);
@@ -281,22 +292,26 @@ public class DocServiceImpl implements DocService {
 
     @Override
     public List<ImagePO> getImagesByTitle(MultipartFile file, int paragraphId) throws IOException {
+        paragraphId--;
         InputStream is = file.getInputStream();
         HWPFDocument doc = new HWPFDocument(is);
         Range range = doc.getRange();
         int paraNum = range.numParagraphs();
         int co = paragraphId;
-        for (int i = paragraphId; i < paraNum; i++) {
+        for (int i = paragraphId+1; i < paraNum; i++) {
             //1-8 9是段落，越大等级越小
             if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
                 co++;
+            }
+            else {
+                break;
             }
         }
         range = new Range(paragraphId, co, doc);
         int length = range.numParagraphs();
         List<ImagePO> imagePOList = new ArrayList<>();
         PicturesTable pTable = doc.getPicturesTable();
-        for (int i = paragraphId; i < paragraphId + length; i++) {
+        for (int i = paragraphId; i < paragraphId + length+1; i++) {
             Range rangeTemp = new Range(i, i + 1, doc);
             CharacterRun cr = rangeTemp.getCharacterRun(0);
             if (pTable.hasPicture(cr)) {
@@ -317,29 +332,33 @@ public class DocServiceImpl implements DocService {
 
     @Override
     public List<TablePO> getTablesByTitle(MultipartFile file, int paragraphId) throws IOException {
+        paragraphId--;
         List<TablePO> tableList = new ArrayList<>();
         InputStream is = file.getInputStream();
         HWPFDocument doc = new HWPFDocument(is);
         Range range = doc.getRange();
         int paraNumTemp = range.numParagraphs();
         int temp = paragraphId;
-        for (int i = paragraphId; i < paraNumTemp; i++) {
+        for (int i = paragraphId+1; i < paraNumTemp; i++) {
             //1-8 9是段落，越大等级越小
             if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
                 temp++;
             }
+            else {
+                break;
+            }
         }
         // 从标题开始遍历所有的段，如果在table里，co为i，然后用co去找表格段尾
         int co = paragraphId;
-        for (int i = co; i < temp; i++) {
+        for (int i = co; i < temp+1; i++) {
             Paragraph paragraph = range.getParagraph(i);
             TablePO tablePO = new TablePO();
             if (paragraph.isInTable()) {
                 co = i;
-                while (range.getParagraph(co).isInTable()) {
+                while (co<=temp && range.getParagraph(co).isInTable()) {
                     co++;
                 }
-                if (i != 0 && co != temp - 1) {
+                if (i != 0 && co != temp) {
                     Paragraph paragraphPref = range.getParagraph(i - 1);
                     Paragraph paragraphAfter = range.getParagraph(co);
                     TableGraphPO paragraphPOPref = new TableGraphPO();
@@ -360,7 +379,7 @@ public class DocServiceImpl implements DocService {
                     } else {
                         tablePO.setTextAfter("");
                     }
-                } else if (i == 0 && co != temp - 1) {
+                } else if (i == 0 && co != temp) {
                     TableGraphPO paragraphPOPref = new TableGraphPO();
                     TableGraphPO paragraphPOAfter = new TableGraphPO();
                     Paragraph paragraphAfter = range.getParagraph(co);
@@ -380,7 +399,7 @@ public class DocServiceImpl implements DocService {
                     } else {
                         tablePO.setTextAfter("");
                     }
-                } else if (co == temp - 1 && i != 0) {
+                } else if (co == temp && i != 0) {
                     Paragraph paragraphPref = range.getParagraph(i - 1);
                     TableGraphPO paragraphPOPref = new TableGraphPO();
                     TableGraphPO paragraphPOAfter = new TableGraphPO();
@@ -411,6 +430,7 @@ public class DocServiceImpl implements DocService {
                 }
                 tablePO.setTableContent(tableContent);
                 tableList.add(tablePO);
+                i=co-1;
             }
         }
         return tableList;
