@@ -4,7 +4,9 @@ import com.example.application.PO.*;
 import com.example.application.service.DocxService;
 import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Picture;
+import org.apache.poi.hwpf.usermodel.Range;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDecimalNumber;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,150 +14,185 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
 public class DocxServiceImpl implements DocxService {
     @Override
-    public List<ParagraphPO> getAllParagraphs(MultipartFile file) throws IOException {
-        InputStream is = file.getInputStream();
-        XWPFDocument doc = new XWPFDocument(is);
-        List<ParagraphPO> paragraphList = new ArrayList<>();
-        List<XWPFParagraph> paras = doc.getParagraphs();
-        for (XWPFParagraph paragraph : paras) {
-            ParagraphPO paragraphPO = new ParagraphPO();
-            XWPFRun xwpfRun = paragraph.getRuns().get(0);
-            paragraphPO.setParagraphId(paragraph.getNumID().intValue());
-            paragraphPO.setParagraphText(paragraphPO.getParagraphText());
-            paragraphPO.setFontSize(xwpfRun.getFontSize());
-            paragraphPO.setFontName(xwpfRun.getFontName());
-            paragraphPO.setIsBold(xwpfRun.isBold());
-            paragraphPO.setIsItalic(xwpfRun.isItalic());
-            paragraphPO.setIsInTable(false);
-            //TODO 存疑
-            paragraphPO.setLvl(Integer.parseInt(paragraph.getStyle()));
-            paragraphPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
-            paragraphPO.setFontAlignment(paragraph.getFontAlignment());
-            paragraphPO.setIsTableRowEnd(false);
-            paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
-            paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
-            paragraphList.add(paragraphPO);
-        }
-        return paragraphList;
-    }
-
-    @Override
-    //TODO
-    public List<TablePO> getAllTables(MultipartFile file) throws IOException {
-        return null;
-    }
-
-    @Override
-    public List<ImagePO> getAllImages(MultipartFile file) throws IOException {
-        List<ImagePO> imagePOList = new ArrayList<>();
-        InputStream is = file.getInputStream();
-        XWPFDocument doc = new XWPFDocument(is);
-        List<XWPFPictureData> picList = doc.getAllPictures();
-        List<XWPFParagraph> paras = doc.getParagraphs();
-        for (XWPFParagraph paragraph : paras) {
-            XWPFRun xwpfRun = paragraph.getRuns().get(0);
-            for (XWPFPicture pic : xwpfRun.getEmbeddedPictures()) {
-                ImagePO imagePO = new ImagePO();
-                imagePO.setWidth(pic.getWidth());
-                imagePO.setHeight(pic.getDepth());
-                imagePO.setTextBefore(pic.getDescription());
-                imagePO.setTextAfter(pic.getDescription());
-                imagePO.setSuggestFileExtension(pic.getPictureData().suggestFileExtension());
-                imagePO.setFilename(pic.getPictureData().getFileName());
-                imagePO.setBase64Content(pic.getPictureData().getData());
-                imagePOList.add(imagePO);
+    public void wordParse(MultipartFile file, HashMap<String, List<ParagraphPO>> paragraphHashMap, HashMap<String, List<TablePO>> tableHashMap, HashMap<String, List<ImagePO>> imageHashMap, HashMap<String, List<TitlePO>> titleHashMap,HashMap<String,List<FontPO>> fontHashMap, String token) throws IOException {
+        InputStream is =file.getInputStream();
+        List<ParagraphPO> paragraphPOS=new ArrayList<>();
+        List<TablePO> tablePOS=new ArrayList<>();
+        List<ImagePO> imagePOS=new ArrayList<>();
+        List<TitlePO> titlePOS=new ArrayList<>();
+        List<FontPO> fontPOS=new ArrayList<>();
+        XWPFDocument doc=new XWPFDocument(is);
+        Iterator<IBodyElement> iterator=doc.getBodyElementsIterator();
+        int paragraphId=1;
+        Boolean tableFtlag=false;
+        while (iterator.hasNext()){
+            IBodyElement item=iterator.next();
+            if(item instanceof XWPFParagraph){
+                XWPFParagraph paragraph=(XWPFParagraph) item;
+                ParagraphPO paragraphPO = new ParagraphPO();
+                if(paragraph.getRuns().size()==0){
+                    continue;
+                }
+                XWPFRun xwpfRun = paragraph.getRuns().get(0);
+                paragraphPO.setParagraphId(paragraphId);
+                if(tableFtlag){
+                    TablePO tablePO=tablePOS.get(tablePOS.size()-1);
+                    tablePO.setParagraphAfter(new TableGraphPO(paragraphId,paragraph.getParagraphText()));
+                    if(paragraph.getParagraphText().length()<=10){
+                        tablePO.setTextAfter(paragraph.getParagraphText());
+                    }
+                    tableFtlag=false;
+                }
+                paragraphPO.setParagraphText(paragraph.getParagraphText());
+                paragraphPO.setFontSize(xwpfRun.getFontSize());
+                paragraphPO.setFontName(xwpfRun.getFontName());
+                paragraphPO.setIsBold(xwpfRun.isBold());
+                paragraphPO.setIsItalic(xwpfRun.isItalic());
+                FontPO fontPO=new FontPO();
+                fontPO.setFontSize(xwpfRun.getFontSize());
+                fontPO.setFontName(xwpfRun.getFontName());
+                fontPO.setIsBold(xwpfRun.isBold());
+                fontPO.setIsItalic(xwpfRun.isItalic());
+                fontPO.setFontAlignment(paragraph.getFontAlignment());
+                if(xwpfRun.getColor()!=null){
+                    fontPO.setColor(Integer.parseInt(xwpfRun.getColor()));
+                }
+                fontPOS.add(fontPO);
+                paragraphPO.setIsInTable(false);
+                //TODO 存疑
+                if(paragraph.getCTP().getPPr().getOutlineLvl()!=null){
+                    paragraphPO.setLvl(Integer.parseInt(paragraph.getStyle()));
+                }
+                paragraphPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
+                paragraphPO.setFontAlignment(paragraph.getFontAlignment());
+                paragraphPO.setIsTableRowEnd(false);
+                paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
+                paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
+                paragraphPOS.add(paragraphPO);
+                if(paragraph.getCTP().getPPr().getOutlineLvl()!=null){
+                    String style = paragraph.getStyle();
+                    if (style.compareTo("9") < 0) {
+                        TitlePO title = new TitlePO();
+                        title.setParagraphText(paragraph.getParagraphText());
+                        title.setParagraphId(paragraphId);
+                        title.setIndentFromLeft(paragraph.getIndentFromLeft());
+                        title.setIndentFromRight(paragraph.getIndentFromRight());
+                        title.setFirstLineIndent(paragraph.getFirstLineIndent());
+                        title.setLvl(Integer.parseInt(paragraph.getStyle()));
+                        titlePOS.add(title);
+                    }
+                }
+                for (XWPFRun xwpfRun1: paragraph.getRuns()){
+                    for (XWPFPicture picture : xwpfRun1.getEmbeddedPictures()){
+                        ImagePO imagePO=new ImagePO();
+                        imagePO.setParagraphBefore(paragraphId-1);
+                        imagePO.setWidth(picture.getWidth());
+                        imagePO.setHeight(picture.getDepth());
+                        imagePO.setTextBefore(picture.getDescription());
+                        imagePO.setTextAfter(picture.getDescription());
+                        imagePO.setSuggestFileExtension(picture.getPictureData().suggestFileExtension());
+                        imagePO.setFilename(picture.getPictureData().getFileName());
+                        imagePO.setBase64Content(picture.getPictureData().getData());
+                        imagePOS.add(imagePO);
+                    }
+                }
+                paragraphId++;
+            }
+            else if(item instanceof XWPFTable){
+                TablePO tablePO=new TablePO();
+                List<TableGraphPO> tableGraphPOS=new ArrayList<>();
+                XWPFTable table=(XWPFTable) item;
+                List<XWPFTableRow> rows = table.getRows();
+                if(paragraphId>1){
+                    ParagraphPO tmp=paragraphPOS.get(paragraphPOS.size()-1);
+                    tablePO.setParagraphBefore(new TableGraphPO(paragraphId-1,tmp.getParagraphText()));
+                    if(tmp.getParagraphText().length()<=10){
+                        tablePO.setTextBefore(tmp.getParagraphText());
+                    }
+                }
+                for (XWPFTableRow row : rows) {
+                    // 获取表格的每个单元格
+                    List<XWPFTableCell> tableCells = row.getTableCells();
+                    for (XWPFTableCell cell : tableCells) {
+                        // 获取单元格的内容
+                        String text = cell.getText();
+                        XWPFParagraph paragraph=cell.getParagraphs().get(0);
+                        ParagraphPO paragraphPO=new ParagraphPO();
+                        XWPFRun xwpfRun = paragraph.getRuns().get(0);
+                        paragraphPO.setParagraphId(paragraphId);
+                        paragraphPO.setParagraphText(text);
+                        paragraphPO.setFontSize(xwpfRun.getFontSize());
+                        paragraphPO.setFontName(xwpfRun.getFontName());
+                        paragraphPO.setIsBold(xwpfRun.isBold());
+                        paragraphPO.setIsItalic(xwpfRun.isItalic());
+                        paragraphPO.setIsInTable(false);
+                        //TODO 存疑
+                        if(paragraph.getCTP().getPPr().getOutlineLvl()!=null){
+                            paragraphPO.setLvl(Integer.parseInt(paragraph.getStyle()));
+                        }
+                        paragraphPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
+                        paragraphPO.setFontAlignment(paragraph.getFontAlignment());
+                        paragraphPO.setIsTableRowEnd(false);
+                        paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
+                        paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
+                        paragraphPOS.add(paragraphPO);
+                        TableGraphPO tableGraphPO=new TableGraphPO(paragraphId,text);
+                        tableGraphPOS.add(tableGraphPO);
+                        FontPO fontPO=new FontPO();
+                        fontPO.setFontSize(xwpfRun.getFontSize());
+                        fontPO.setFontName(xwpfRun.getFontName());
+                        fontPO.setIsBold(xwpfRun.isBold());
+                        fontPO.setIsItalic(xwpfRun.isItalic());
+                        fontPO.setFontAlignment(paragraph.getFontAlignment());
+                        if(xwpfRun.getColor()!=null){
+                            fontPO.setColor(Integer.parseInt(xwpfRun.getColor()));
+                        }
+                        fontPOS.add(fontPO);
+                        paragraphId++;
+                    }
+                }
+                tablePO.setTableContent(tableGraphPOS);
+                tableFtlag=true;
+                tablePOS.add(tablePO);
+            }
+            else if(item instanceof XWPFPicture){
+                XWPFPicture picture=(XWPFPicture) item;
+                ImagePO imagePO=new ImagePO();
+                imagePO.setParagraphBefore(paragraphId-1);
+                imagePO.setWidth(picture.getWidth());
+                imagePO.setHeight(picture.getDepth());
+                imagePO.setTextBefore(picture.getDescription());
+                imagePO.setTextAfter(picture.getDescription());
+                imagePO.setSuggestFileExtension(picture.getPictureData().suggestFileExtension());
+                imagePO.setFilename(picture.getPictureData().getFileName());
+                imagePO.setBase64Content(picture.getPictureData().getData());
+                imagePOS.add(imagePO);
             }
         }
-        return imagePOList;
+        paragraphHashMap.put(token,paragraphPOS);
+        tableHashMap.put(token,tablePOS);
+        imageHashMap.put(token,imagePOS);
+        titleHashMap.put(token,titlePOS);
+        fontHashMap.put(token,fontPOS);
     }
 
-    @Override
-    public List<TitlePO> getAllTitles(MultipartFile file) throws IOException {
-        InputStream is = file.getInputStream();
-        XWPFDocument doc = new XWPFDocument(is);
-        List<XWPFParagraph> paras = doc.getParagraphs();
-        List<TitlePO> titlelist = new ArrayList<>();
-        for (XWPFParagraph graph : paras) {
-            String style = graph.getStyle();
-            if (style.compareTo("9") < 0) {
-                TitlePO title = new TitlePO();
-                title.setParagraphText(graph.getParagraphText());
-                title.setParagraphId(graph.getNumID().intValue());
-                title.setIndentFromLeft(graph.getIndentFromLeft());
-                title.setIndentFromRight(graph.getIndentFromRight());
-                title.setFirstLineIndent(graph.getFirstLineIndent());
-                title.setLvl(Integer.parseInt(graph.getStyle()));
-                titlelist.add(title);
-            }
-        }
-        return titlelist;
-    }
 
     @Override
-    public ParagraphPO getParagraphText(XWPFParagraph paragraph, int id) {
-        ParagraphPO paragraphPO = new ParagraphPO();
-        XWPFRun xwpfRun = paragraph.getRuns().get(0);
-        paragraphPO.setParagraphText(paragraph.getParagraphText());
-        paragraphPO.setParagraphId(Integer.parseInt(paragraph.getStyle()));
-        paragraphPO.setFontSize(xwpfRun.getFontSize());
-        paragraphPO.setFontName(xwpfRun.getFontName());
-        paragraphPO.setIsBold(xwpfRun.isBold());
-        paragraphPO.setIsItalic(xwpfRun.isItalic());
-        paragraphPO.setIsInTable(false);
-        //TODO 存疑
-        paragraphPO.setLvl(Integer.parseInt(paragraph.getStyle()));
-        paragraphPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
-        paragraphPO.setFontAlignment(paragraph.getFontAlignment());
-        paragraphPO.setIsTableRowEnd(false);
-        paragraphPO.setIndentFromLeft(paragraph.getIndentFromLeft());
-        paragraphPO.setIndentFromRight(paragraph.getIndentFromRight());
-        return paragraphPO;
-    }
-
-    @Override
-    public ParagraphFormatPO getParagraphFormat(XWPFParagraph paragraph, int id) {
+    public ParagraphFormatPO getParagraphFormat(ParagraphPO paragraph) {
         ParagraphFormatPO paragraphFormatPO = new ParagraphFormatPO();
-        paragraphFormatPO.setLvl(Integer.parseInt(paragraph.getStyle()));
+        paragraphFormatPO.setLvl(paragraph.getLvl());
         paragraphFormatPO.setIndentFromLeft(paragraph.getIndentFromLeft());
         paragraphFormatPO.setIndentFromRight(paragraph.getIndentFromRight());
         paragraphFormatPO.setFirstLineIndent(paragraph.getFirstLineIndent());
-        paragraphFormatPO.setLineSpacing(paragraph.getSpacingLineRule().getValue());
+        paragraphFormatPO.setLineSpacing(paragraph.getLineSpacing());
         return paragraphFormatPO;
     }
 
-    @Override
-    public FontPO getParagraphFontFormat(XWPFParagraph paragraph) {
-        FontPO fontPO = new FontPO();
-        XWPFRun xwpfRun = paragraph.getRuns().get(0);
-        fontPO.setColor(Integer.parseInt(xwpfRun.getColor()));
-        fontPO.setFontSize(xwpfRun.getFontSize());
-        fontPO.setFontName(xwpfRun.getFontName());
-        fontPO.setIsBold(xwpfRun.isBold());
-        fontPO.setIsItalic(xwpfRun.isItalic());
-        fontPO.setFontAlignment(paragraph.getFontAlignment());
-        return fontPO;
-    }
-
-    @Override
-    //TODO
-    public List<ParagraphPO> getParagraphByTitle(MultipartFile file, int paragraphId) throws IOException {
-        return null;
-    }
-
-    @Override
-    //TODO
-    public List<ImagePO> getImagesByTitle(MultipartFile file, int paragraphId) throws IOException {
-        return null;
-    }
-
-    @Override
-    //TODO
-    public List<TablePO> getTablesByTitle(MultipartFile file, int paragraphId) throws IOException {
-        return null;
-    }
 }

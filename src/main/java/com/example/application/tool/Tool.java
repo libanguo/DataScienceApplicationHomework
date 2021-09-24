@@ -1,5 +1,16 @@
 package com.example.application.tool;
 
+import com.spire.pdf.FileFormat;
+import com.spire.pdf.PdfDocument;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -38,4 +49,41 @@ public class Tool {
 
         return strResult;
     }
+    public static MultipartFile transferPdfToDoc(MultipartFile file) throws IOException {
+        InputStream is =file.getInputStream();
+        PdfDocument pdf = new PdfDocument();
+        pdf.loadFromStream(is);
+        pdf.saveToFile("WPWPOI/files/"+file.getOriginalFilename().split("\\.")[0]+".doc", FileFormat.DOC);
+        Path path = Paths.get("WPWPOI/files/"+file.getOriginalFilename().split("\\.")[0]+".doc");
+        File file1 = new File(path.toUri());
+        MultipartFile multipartFile = fileToMultipartFile(file1);
+//        file1.delete();
+        return multipartFile;
+    }
+
+    public static MultipartFile fileToMultipartFile(File file) {
+        FileItem fileItem = createFileItem(file);
+        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+        return multipartFile;
+    }
+
+    private static FileItem createFileItem(File file) {
+        FileItemFactory factory = new DiskFileItemFactory(16, null);
+        FileItem item = factory.createItem("textField", "text/plain", true, file.getName());
+        int bytesRead = 0;
+        byte[] buffer = new byte[8192];
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            OutputStream os = item.getOutputStream();
+            while ((bytesRead = fis.read(buffer, 0, 8192)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+            os.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return item;
+    }
+
 }

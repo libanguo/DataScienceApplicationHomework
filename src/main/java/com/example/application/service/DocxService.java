@@ -6,27 +6,14 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 public interface DocxService {
-    public List<ParagraphPO> getAllParagraphs(MultipartFile file) throws IOException;
+    public void wordParse(MultipartFile file, HashMap<String, List<ParagraphPO>> paragraphHashMap,HashMap<String, List<TablePO>> tableHashMap,HashMap<String, List<ImagePO>> imageHashMap,HashMap<String, List<TitlePO>> titleHashMap,HashMap<String,List<FontPO>> fontHashMap,String token) throws IOException;
 
-    public List<TablePO> getAllTables(MultipartFile file) throws IOException;
+    public ParagraphFormatPO getParagraphFormat(ParagraphPO paragraph);
 
-    public List<ImagePO> getAllImages(MultipartFile file) throws IOException;
 
-    public List<TitlePO> getAllTitles(MultipartFile file) throws IOException;
-
-    public ParagraphPO getParagraphText(XWPFParagraph paragraph, int id);
-
-    public ParagraphFormatPO getParagraphFormat(XWPFParagraph paragraph, int id);
-
-    public FontPO getParagraphFontFormat(XWPFParagraph paragraph);
-
-    public List<ParagraphPO> getParagraphByTitle(MultipartFile file, int paragraphId) throws IOException;
-
-    public List<ImagePO> getImagesByTitle(MultipartFile file, int paragraphId) throws IOException;
-
-    public List<TablePO> getTablesByTitle(MultipartFile file, int paragraphId) throws IOException;
 
 }

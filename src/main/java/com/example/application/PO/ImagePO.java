@@ -7,6 +7,7 @@ import lombok.Setter;
 @Getter
 
 public class ImagePO {
+    private int paragraphBefore;
     private String textBefore;
     private String textAfter;
     private Double height;
