@@ -58,13 +58,13 @@ public class DocServiceImpl implements DocService {
         int paraNum = range.numParagraphs();
         // 从头开始遍历所有的段，如果在table里，co为i，然后用co去找表格段尾
         int co = 0;
-        int i=0;
-        while (i<paraNum){
+        int i = 0;
+        while (i < paraNum) {
             Paragraph paragraph = range.getParagraph(i);
             TablePO tablePO = new TablePO();
             if (paragraph.isInTable()) {
                 co = i;
-                while (co<paraNum && range.getParagraph(co).isInTable()) {
+                while (co < paraNum && range.getParagraph(co).isInTable()) {
                     co++;
                 }
                 if (i != 0 && co != paraNum) {
@@ -139,9 +139,8 @@ public class DocServiceImpl implements DocService {
                 }
                 tablePO.setTableContent(tableContent);
                 tableList.add(tablePO);
-                i=co;
-            }
-            else {
+                i = co;
+            } else {
                 i++;
             }
         }
@@ -168,8 +167,8 @@ public class DocServiceImpl implements DocService {
                 imagePO.setTextBefore(pic.getDescription());
                 imagePO.setTextAfter(pic.getDescription());
                 imagePO.setBase64Content(pic.getContent());
-                imagePO.setHeight(Double.parseDouble(pic.getHeight()+""));
-                imagePO.setWidth(Double.parseDouble(pic.getWidth()+""));
+                imagePO.setHeight(Double.parseDouble(pic.getHeight() + ""));
+                imagePO.setWidth(Double.parseDouble(pic.getWidth() + ""));
                 imagePO.setSuggestFileExtension(pic.suggestFileExtension());
                 imagePOList.add(imagePO);
             }
@@ -239,7 +238,7 @@ public class DocServiceImpl implements DocService {
         Paragraph paragraphToGet = paragraph;
         FontPO fontPO = new FontPO();
         CharacterRun characterRun = paragraphToGet.getCharacterRun(0);
-        fontPO.setColor(characterRun.getColor()+"");
+        fontPO.setColor(characterRun.getColor() + "");
         fontPO.setFontSize(characterRun.getFontSize());
         fontPO.setFontName(characterRun.getFontName());
         fontPO.setFontAlignment(paragraphToGet.getFontAlignment());
@@ -256,17 +255,16 @@ public class DocServiceImpl implements DocService {
         Range range = doc.getRange();
         int paraNum = range.numParagraphs();
         int co = paragraphId;
-        for (int i = paragraphId+1; i < paraNum; i++) {
+        for (int i = paragraphId + 1; i < paraNum; i++) {
             //1-8 9是段落，越大等级越小
             if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
                 co++;
-            }
-            else {
+            } else {
                 break;
             }
         }
         List<ParagraphPO> paragraphList = new ArrayList<>();
-        for (int i = paragraphId; i < co+1; i++) {
+        for (int i = paragraphId; i < co + 1; i++) {
             ParagraphPO paragraphPO = new ParagraphPO();
             Paragraph paragraph = range.getParagraph(i);
             CharacterRun characterRun = paragraph.getCharacterRun(0);
@@ -298,12 +296,11 @@ public class DocServiceImpl implements DocService {
         Range range = doc.getRange();
         int paraNum = range.numParagraphs();
         int co = paragraphId;
-        for (int i = paragraphId+1; i < paraNum; i++) {
+        for (int i = paragraphId + 1; i < paraNum; i++) {
             //1-8 9是段落，越大等级越小
             if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
                 co++;
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -311,7 +308,7 @@ public class DocServiceImpl implements DocService {
         int length = range.numParagraphs();
         List<ImagePO> imagePOList = new ArrayList<>();
         PicturesTable pTable = doc.getPicturesTable();
-        for (int i = paragraphId; i < paragraphId + length+1; i++) {
+        for (int i = paragraphId; i < paragraphId + length + 1; i++) {
             Range rangeTemp = new Range(i, i + 1, doc);
             CharacterRun cr = rangeTemp.getCharacterRun(0);
             if (pTable.hasPicture(cr)) {
@@ -321,8 +318,8 @@ public class DocServiceImpl implements DocService {
                 imagePO.setTextBefore(pic.getDescription());
                 imagePO.setTextAfter(pic.getDescription());
                 imagePO.setBase64Content(pic.getContent());
-                imagePO.setHeight(Double.parseDouble(pic.getHeight()+""));
-                imagePO.setWidth(Double.parseDouble(pic.getWidth()+""));
+                imagePO.setHeight(Double.parseDouble(pic.getHeight() + ""));
+                imagePO.setWidth(Double.parseDouble(pic.getWidth() + ""));
                 imagePO.setSuggestFileExtension(pic.suggestFileExtension());
                 imagePOList.add(imagePO);
             }
@@ -339,23 +336,22 @@ public class DocServiceImpl implements DocService {
         Range range = doc.getRange();
         int paraNumTemp = range.numParagraphs();
         int temp = paragraphId;
-        for (int i = paragraphId+1; i < paraNumTemp; i++) {
+        for (int i = paragraphId + 1; i < paraNumTemp; i++) {
             //1-8 9是段落，越大等级越小
             if (range.getParagraph(i).getLvl() > range.getParagraph(paragraphId).getLvl()) {
                 temp++;
-            }
-            else {
+            } else {
                 break;
             }
         }
         // 从标题开始遍历所有的段，如果在table里，co为i，然后用co去找表格段尾
         int co = paragraphId;
-        for (int i = co; i < temp+1; i++) {
+        for (int i = co; i < temp + 1; i++) {
             Paragraph paragraph = range.getParagraph(i);
             TablePO tablePO = new TablePO();
             if (paragraph.isInTable()) {
                 co = i;
-                while (co<=temp && range.getParagraph(co).isInTable()) {
+                while (co <= temp && range.getParagraph(co).isInTable()) {
                     co++;
                 }
                 if (i != 0 && co != temp) {
@@ -430,7 +426,7 @@ public class DocServiceImpl implements DocService {
                 }
                 tablePO.setTableContent(tableContent);
                 tableList.add(tablePO);
-                i=co-1;
+                i = co - 1;
             }
         }
         return tableList;
